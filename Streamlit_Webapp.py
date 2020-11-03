@@ -14,15 +14,12 @@ import seaborn as sns
 
 
 # ML Pkgs
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler  
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from tensorflow.keras.models import Sequential
@@ -72,21 +69,6 @@ def preprocessing(df):
     return x, y
 
 
-
-# Training Decission Tree for Classification
-@st.cache(allow_output_mutation=True)
-def decisionTree(x_train, x_test, y_train, y_test):
-    # Train the model
-    dtc = DecisionTreeClassifier(criterion ='entropy', random_state = 1)
-    dtc.fit(x_train, y_train)
-    y_pred = dtc.predict(x_test)
-    score = metrics.accuracy_score(y_test, y_pred) * 100
-    report = classification_report(y_test, y_pred)
-
-    return score, report, dtc
-
-
-
 # Training KNN Classifier
 @st.cache(allow_output_mutation=True)
 def Knn_Classifier(x_train, x_test, y_train, y_test):
@@ -99,20 +81,6 @@ def Knn_Classifier(x_train, x_test, y_train, y_test):
     return score, report, knn    
 
 
-
-# Training Random Forest for Classification
-@st.cache(allow_output_mutation=True)
-def randomForest(x_train, x_test, y_train, y_test):
-    rfc = RandomForestClassifier(n_estimators = 10, criterion ='entropy', random_state=1)
-    rfc.fit(x_train, y_train)
-    y_pred = rfc.predict(x_test)
-    score = metrics.accuracy_score(y_test, y_pred) * 100
-    report = classification_report(y_test, y_pred)
-
-    return score, report, rfc
-
-
-
 # Training Logistic Regression
 @st.cache(allow_output_mutation=True)
 def logisticRegression(x_train, x_test, y_train, y_test):
@@ -123,7 +91,6 @@ def logisticRegression(x_train, x_test, y_train, y_test):
     report = classification_report(y_test, y_pred)
 
     return score, report, log
-
 
 
 # Training Support Vector Machine
@@ -198,7 +165,7 @@ def main():
     le = LabelEncoder()
     y = le.fit_transform(y)
 
-    # 1. Splitting x,y into Training & Test set.
+    # Splitting x,y into Training & Test set.
     x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.3,random_state=101) 
 
     # Feature Scaling
@@ -275,11 +242,10 @@ def main():
         if st.checkbox("Make Prediction"):
             choose_mdl = st.selectbox("Choose a Model:",["Decision Tree","Neural Network","K-Nearest Neighbours","SVM","Logistic Regression","Random Forest Classification"])
             
-            if(choose_mdl =="Decision Tree"):
-                score, report, dtc = decisionTree(x_train, x_test, y_train, y_test)
-                pred = dtc.predict(sc.transform(sample_data))
+            if(choose_mdl == "Logistic Regression"):
+                score,report,log = logisticRegression(x_train, x_test, y_train, y_test)
+                pred = log.predict(sc.transform(sample_data))
                 st.write("The Predicted Class is: ", le.inverse_transform(pred))
-                
             
             elif(choose_mdl == "Neural Network"):
                 score,report,model= neuralNet(x_train,x_test,y_train,y_test)
@@ -296,41 +262,15 @@ def main():
                 pred = svc_linear.predict(sc.transform(sample_data))
                 st.write("The Predicted Class is: ", le.inverse_transform(pred))
                 
-            elif(choose_mdl == "Logistic Regression"):
-                score,report,log = logisticRegression(x_train, x_test, y_train, y_test)
-                pred = log.predict(sc.transform(sample_data))
-                st.write("The Predicted Class is: ", le.inverse_transform(pred))
-            
-            elif(choose_mdl == "Random Forest Classification"):
-                score,report,rfc = randomForest(x_train, x_test, y_train, y_test)
-                pred = rfc.predict(sc.transform(sample_data))
-                st.write("The Predicted Class is: ", le.inverse_transform(pred))
-
     
     # ML Model Report
     
     
     choose_model = st.sidebar.selectbox("ML Model Analysis",
-	["NONE","Decision Tree","Neural Network","K-Nearest Neighbours","SVM","Logistic Regression","Random Forest Classification"])
+	["NONE","Logistic Regression","Neural Network","K-Nearest Neighbours","SVM"])
 
-
-    if(choose_model == "Decision Tree"):
-        st.write("""
-# Explore different classifiers
-Which one is the best?
-""")
-        score, report, dtc = decisionTree(x_train, x_test, y_train, y_test)
-        st.text("Accuracy of Decision Tree model is: ")
-        st.write(score,"%")
-        print('\n')
-        st.text("Report of Decision Tree model is: ")
-        st.write(report)
-        print('\n')
-        cm = confusion_matrix(y_test,dtc.predict(x_test))
-        st.write(sns.heatmap(cm,annot=True,fmt="d", cmap="mako"))
-        st.pyplot()
         
-    elif(choose_model == "Neural Network"):
+    if(choose_model == "Neural Network"):
         st.write("""
 # Explore different classifiers
 Which one is the best?
@@ -395,25 +335,6 @@ Which one is the best?
         cm = confusion_matrix(y_test,log.predict(x_test))
         st.write(sns.heatmap(cm,annot=True,fmt="d", cmap="mako"))
         st.pyplot()
-
-
-
-    elif(choose_model == "Random Forest Classification"):
-        st.write("""
-# Explore different classifiers
-Which one is the best?
-""")
-        score,report,rfc = randomForest(x_train, x_test, y_train, y_test)
-        st.text("Accuracy of Random Forest Classification model is: ")
-        st.write(score,"%")
-        print('\n')
-        st.text("Report of Random Forest Classification model is: ")
-        st.write(report)
-        print('\n')
-        cm = confusion_matrix(y_test,rfc.predict(x_test))
-        st.write(sns.heatmap(cm,annot=True,fmt="d", cmap="mako"))
-        st.pyplot()
-
 
 if __name__ == "__main__":
     main()
