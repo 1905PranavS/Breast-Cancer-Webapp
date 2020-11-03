@@ -25,6 +25,9 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense,Dropout
+from tensorflow.keras.callbacks import EarlyStopping
 
 
 # Basic preprocessing required for all the models.  
@@ -138,13 +141,20 @@ def svm(x_train, x_test, y_train, y_test):
 
 @st.cache(allow_output_mutation=True)
 def neuralNet(x_train, x_test, y_train, y_test):
-    clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(11,2),activation='relu', random_state=1)
-    clf.fit(x_train, y_train)
-    y_pred = clf.predict(x_test)
+    model = Sequential()
+    model.add(Dense(15,activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(11,activation='relu'))
+    model.add(Dropout(0.4))
+    model.add(Dense(1,activation='sigmoid'))
+    model.compile(loss='binary_crossentropy',optimizer='adam')
+    early_stop = EarlyStopping(monitor='val_loss',mode='min',verbose=1,patience=25)
+    model.fit(x=x_train,y=y_train,epochs=600,validation_data=(x_test,y_test),callbacks=[early_stop])
+    y_pred = model.predict_classes(x_test)
     score = metrics.accuracy_score(y_test, y_pred) * 100
     report = classification_report(y_test, y_pred)
     
-    return score, report, clf
+    return score, report, model
 
 
 def accept_user_data():
@@ -272,8 +282,8 @@ def main():
                 
             
             elif(choose_mdl == "Neural Network"):
-                score,report,clf= neuralNet(x_train,x_test,y_train,y_test)
-                pred = clf.predict(sc.transform(sample_data))
+                score,report,model= neuralNet(x_train,x_test,y_train,y_test)
+                pred = model.predict_classes(sc.transform(sample_data))
                 st.write("The Predicted Class is: ", le.inverse_transform(pred))
             
             elif(choose_mdl == "K-Nearest Neighbours"):
@@ -325,14 +335,14 @@ Which one is the best?
 # Explore different classifiers
 Which one is the best?
 """)
-        score,report,clf= neuralNet(x_train,x_test,y_train,y_test)
+        score,report,model= neuralNet(x_train,x_test,y_train,y_test)
         st.text("Accuracy of Neural Network model is: ")
         st.write(score,"%")
         print('\n')
         st.text("Report of Neural Network model is: ")
         st.write(report)
         print('\n')
-        cm = confusion_matrix(y_test,clf.predict(x_test))
+        cm = confusion_matrix(y_test,model.predict_classes(x_test))
         st.write(sns.heatmap(cm,annot=True,fmt="d", cmap="mako"))
         st.pyplot()
         
