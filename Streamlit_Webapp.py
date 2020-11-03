@@ -240,7 +240,7 @@ def main():
         
         st.subheader("Prediction")
         if st.checkbox("Make Prediction"):
-            choose_mdl = st.selectbox("Choose a Model:",["Decision Tree","Neural Network","K-Nearest Neighbours","SVM","Logistic Regression","Random Forest Classification"])
+            choose_mdl = st.selectbox("Choose a Model:",["Logistic Regression","Neural Network","K-Nearest Neighbours","SVM"])
             
             if(choose_mdl == "Logistic Regression"):
                 score,report,log = logisticRegression(x_train, x_test, y_train, y_test)
